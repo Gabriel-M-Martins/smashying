@@ -9,10 +9,24 @@ import SwiftUI
 
 struct MainMenuView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            NavigationLink {
+                GameView(mode: .Timed(seconds: 150))
+            } label: {
+                Text("Timed")
+            }
+            
+            NavigationLink {
+                GameView(mode: .Hittable(hits: 3))
+            } label: {
+                Text("Hittable")
+            }
+        }
     }
 }
 
 #Preview {
-    MainMenuView()
+    NavigationStack {
+        MainMenuView()
+    }
 }

@@ -11,7 +11,9 @@ import SwiftUI
 struct SmashSidesApp: App {
     var body: some Scene {
         WindowGroup {
-            GameView()
+            NavigationStack {
+                MainMenuView()
+            }
         }
     }
 }

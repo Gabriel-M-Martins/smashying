@@ -18,37 +18,21 @@ class EnemyNode: SKSpriteNode {
         let size = view.height * 0.05
         super.init(texture: nil, color: .red, size: .init(width: size, height: size))
         
-        let pb = SKPhysicsBody()
+        let pb = SKPhysicsBody(rectangleOf: .init(width: size, height: size))
         pb.allowsRotation = false
         pb.affectedByGravity = false
         
         pb.categoryBitMask = PhysicsCategory.enemies
         pb.contactTestBitMask = PhysicsCategory.zoneA + PhysicsCategory.zoneB + PhysicsCategory.zoneC
-        pb.collisionBitMask = PhysicsCategory.player
-        
+        pb.collisionBitMask = PhysicsCategory.player + PhysicsCategory.enemies
+
         self.physicsBody = pb
 
         self.position.y += size * 0.4
         self.zPosition = Layers.enemies
         
         let sideCorrector: CGFloat = side == .Left ? -1 : 1
-        self.position.x += view.width/2 * 1.2 * sideCorrector
-        
-//        self.run(
-//            .sequence([
-//                .move(
-//                    to: .init(
-//                        x: 0,
-//                        y: self.position.y
-//                    ),
-//                    duration: 5
-//                ),
-//                .run {
-//                    
-//                }
-//            ]),
-//            withKey: Self.moveAnimationKey
-//        )
+        self.position.x += (size + view.width/2) * sideCorrector
     }
     
     required init?(coder aDecoder: NSCoder) {
