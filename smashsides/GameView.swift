@@ -15,7 +15,8 @@ struct GameView: View {
     @State private var isPressingLeft = false
     @State private var isPressingRight = false
     
-    @State private var messages: [(UUID, CGPoint, CGFloat, CGFloat, Zone)] = []
+    @State private var messages: [Message] = []
+    
     @State private var zoneIndicators: [(UUID, Zone, CGPoint, CGFloat)] = []
     
     @State private var scoreIndicators: [(UUID, Zone, Int, CGFloat, CGFloat)] = []
@@ -54,12 +55,18 @@ struct GameView: View {
                                 .onChanged({ action in
                                     if isPressingLeft { return }
                                     isPressingLeft = true
-                                    scene.onSmashButtonClick(.Left)
+                                    
+                                    let smashed = scene.onSmashButtonClick(.Left)
+                                    if !smashed {
+                                        missedSmash(point: .init(x: reader.size.width * 0.25, y: reader.size.height/2))
+                                    }
                                 })
                                 .onEnded({ _ in
                                     isPressingLeft = false
                                 })
                         )
+                        .disabled(!scene.canStart)
+                        .animation(.easeInOut, value: scene.canStart)
                         .sensoryFeedback(.impact, trigger: isPressingLeft)
                         
                         Rectangle()
@@ -73,12 +80,19 @@ struct GameView: View {
                                 .onChanged({ action in
                                     if isPressingRight { return }
                                     isPressingRight = true
-                                    scene.onSmashButtonClick(.Right)
+                                    
+                                    let smashed = scene.onSmashButtonClick(.Right)
+                                    if !smashed {
+                                        missedSmash(point: .init(x: reader.size.width * 0.75, y: reader.size.height/2))
+                                    }
                                 })
                                 .onEnded({ _ in
                                     isPressingRight = false
                                 })
                         )
+                        .disabled(!scene.canStart)
+                        .animation(.easeInOut, value: scene.canStart)
+                        .sensoryFeedback(.impact, trigger: isPressingRight)
                     }
                 }
                 .padding()
@@ -243,20 +257,26 @@ struct GameView: View {
             }
             .padding(20)
             
-            ForEach(messages, id: \.0) { (id, point, rotation, scale, zone) in
-                Text(zone.message())
-                    .foregroundStyle(zoneColor(zone))
-                    .scaleEffect(scale)
-                    .rotationEffect(.degrees(rotation))
-                    .position(point)
+            ForEach(messages, id: \.id) { message in
+                Text(message.text)
+                    .foregroundStyle(message.color)
+                    .scaleEffect(message.scale)
+                    .rotationEffect(.degrees(message.rotation))
+                    .position(message.point)
+                    .opacity(message.opacity)
                     .onAppear {
-                        guard let idx = messages.firstIndex(where: { $0.0 == id }) else { return }
+                        guard let idx = messages.firstIndex(where: { $0.id == message.id }) else { return }
                         
                         withAnimation {
-                            messages[idx].1.y -= .random(in: reader.size.height*0.15...reader.size.height*0.25)
-                            messages[idx].3 = 1
+                            messages[idx].point.y -= .random(in: reader.size.height*0.15...reader.size.height*0.25)
+                            messages[idx].scale = 1
                         } completion: {
-                            messages.removeAll(where: { $0.0 == id })
+                            withAnimation {
+                                guard let idx = messages.firstIndex(where: { $0.id == message.id }) else { return }
+                                messages[idx].opacity = 0
+                            } completion: {
+                                messages.removeAll(where: { $0.id == message.id })
+                            }
                         }
                     }
             }
@@ -399,12 +419,18 @@ struct GameView: View {
             return .yellow
         }
     }
+    
+    private func missedSmash(point: CGPoint) {
+        messages.append(
+            .init(point: point, rotation: .random(in: -30...30), text: "MISSED!", color: .red)
+        )
+    }
 }
 
 extension GameView: GameDelegate {
     mutating func smashedEnemy(at point: CGPoint, points: Int, zone: Zone) {
         self.messages.append(
-            (.init(), point, .random(in: -30...30), 0, zone)
+            .init(point: point, rotation: .random(in: -30...30), text: zone.message(), color: zoneColor(zone))
         )
         
         self.scoreIndicators.append(

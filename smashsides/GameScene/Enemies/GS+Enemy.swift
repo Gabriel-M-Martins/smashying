@@ -23,23 +23,21 @@ extension GameScene {
                 self.spawnEnemies()
             }
             
-            if tick % enemyAccelerationTickInterval == 0 && enemySpawnTickInterval >= 5 {
+            if tick % (enemyAccelerationTickInterval * 2) == 0 && enemySpawnTickInterval >= 4 {
                 enemySpawnTickInterval -= 1
                 enemyAccelerationTickInterval -= 1
-                if enemySpeed < 250 {
-                    enemySpeed += 2
+                
+                enemySpeed += 3
+                enemies.forEach { [weak self] enemy in
+                    guard let self else { return }
                     
-                    enemies.forEach { [weak self] enemy in
-                        guard let self else { return }
-                        
-                        let path = CGMutablePath()
-                        path.move(to: enemy.position)
-                        path.addLine(to: .init(x: 0, y: enemy.position.y))
-                        
-                        enemy.run(
-                            .follow(path, asOffset: false, orientToPath: false, speed: enemySpeed)
-                        )
-                    }
+                    let path = CGMutablePath()
+                    path.move(to: enemy.position)
+                    path.addLine(to: .init(x: 0, y: enemy.position.y))
+                    
+                    enemy.run(
+                        .follow(path, asOffset: false, orientToPath: false, speed: enemySpeed)
+                    )
                 }
             }
         }

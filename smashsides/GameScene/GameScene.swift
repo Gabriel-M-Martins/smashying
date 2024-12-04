@@ -33,6 +33,7 @@ class GameScene: SKScene, ObservableObject {
     @Published var hasEnded: Bool = false
     @Published var isScenePaused: Bool = false
     @Published var sequence: Int = 0
+    @Published var enemiesSmashed: Int = 0
     
     var enemySpawnTickInterval: Int = 20
     var enemyAccelerationTickInterval: Int = 60
@@ -85,7 +86,7 @@ class GameScene: SKScene, ObservableObject {
             return
         }
         
-        if currentTime - elapsedGameTime >= 0.05 {
+        if currentTime - elapsedGameTime >= 0.075 {
             gametick += 1
             elapsedGameTime += currentTime - elapsedGameTime
         }
@@ -96,8 +97,8 @@ class GameScene: SKScene, ObservableObject {
         }
     }
     
-    func onSmashButtonClick(_ side: Side) {
-        guard let enemyIdx = enemies.firstIndex(where: { $0.side == side }) else { return }
+    func onSmashButtonClick(_ side: Side) -> Bool {
+        guard let enemyIdx = enemies.firstIndex(where: { $0.side == side }) else { return false }
         
         let enemy = enemies[enemyIdx]
         var isInSmashableArea = false
@@ -121,12 +122,13 @@ class GameScene: SKScene, ObservableObject {
         if isInSmashableArea {
             enemies.remove(at: enemyIdx)
             enemy.removeAllActions()
+            let time: CGFloat = 0.25
             enemy.run(
                 .sequence([
                     .group([
-                        .scale(to: 0, duration: 0.3),
-                        .moveTo(y: enemy.position.y + enemy.frame.height * 3, duration: 0.3),
-                        .rotate(byAngle: .pi * 6, duration: 0.3)
+                        .scale(to: 0, duration: time),
+                        .moveTo(y: enemy.position.y + enemy.frame.height * 4, duration: time),
+                        .rotate(byAngle: .pi * 10, duration: time)
                     ]),
                     .removeFromParent()
                 ])
@@ -135,6 +137,7 @@ class GameScene: SKScene, ObservableObject {
             withAnimation {
                 sequence += 1
                 score += points
+                enemiesSmashed += 1
             }
             
             gamedelegate?.smashedEnemy(at: self.convertPoint(toView: enemy.position), points: points, zone: zone)
@@ -143,6 +146,8 @@ class GameScene: SKScene, ObservableObject {
                 sequence = 0
             }
         }
+        
+        return isInSmashableArea
     }
     
     func reset() {
@@ -158,6 +163,8 @@ class GameScene: SKScene, ObservableObject {
         timetick = 0
         gametick = 0
         score = 0
+        sequence = 0
+        enemiesSmashed = 0
         hitstaken = 0
         enemySpeed = 90
         enemySpawnTickInterval = 20
