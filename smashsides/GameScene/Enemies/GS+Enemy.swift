@@ -15,12 +15,12 @@ extension GameScene {
             guard let self else { return }
             
             if tick == 1 {
-                self.spawnEnemies()
+                self.spawnEnemy()
                 return
             }
             
             if tick % enemySpawnTickInterval == 0 {
-                self.spawnEnemies()
+                self.spawnEnemy()
             }
             
             if tick % enemyAccelerationTickInterval == 0 && .random() {
@@ -47,9 +47,33 @@ extension GameScene {
         .store(in: &cancellables)
     }
     
-    func spawnEnemies() {
+    func spawnEnemy() {
         guard let view = self.view else { return }
-        let enemy = EnemyNode(side: .random(), orientation: .random(), view: view.frame.size)
+        
+        let orientation = Orientation.random()
+        
+        if Int.random(in: 1...10) <= 4 {
+            let enemy = EnemyNode(side: .random(), orientation: orientation, view: view.frame.size)
+            
+            let path = CGMutablePath()
+            path.move(to: enemy.position)
+            path.addLine(to: .init(x: 0, y: enemy.position.y))
+            
+            if let furthestEnemy = enemies.filter({ $0.side == enemy.side }).max(by: { abs($0.position.x) > abs($1.position.x) }) {
+                if furthestEnemy.position.x >= view.frame.width {
+                    enemy.position.x = furthestEnemy.position.x + (enemy.size.width * 2 * (furthestEnemy.position.x > 0 ? 1 : -1))
+                }
+            }
+            
+            enemy.run(
+                .follow(path, asOffset: false, orientToPath: false, speed: enemySpeed)
+            )
+            
+            enemies.append(enemy)
+            addChild(enemy)
+        }
+        
+        let enemy = EnemyNode(side: .random(), orientation: orientation, view: view.frame.size)
         
         let path = CGMutablePath()
         path.move(to: enemy.position)

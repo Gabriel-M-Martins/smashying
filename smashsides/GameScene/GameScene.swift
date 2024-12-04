@@ -35,9 +35,9 @@ class GameScene: SKScene, ObservableObject {
     @Published var sequence: Int = 0
     @Published var enemiesSmashed: Int = 0
     
-    var enemySpawnTickInterval: Int = 15
-    var enemyAccelerationTickInterval: Int = 28
-    var enemySpeed: CGFloat = 130
+    var enemySpawnTickInterval: Int = 20
+    var enemyAccelerationTickInterval: Int = 35
+    var enemySpeed: CGFloat = 95
     
     @Published var canStart: Bool = false
     
@@ -177,9 +177,8 @@ class GameScene: SKScene, ObservableObject {
         sequence = 0
         enemiesSmashed = 0
         hitstaken = 0
-        enemySpeed = 110
-        enemySpawnTickInterval = 15
-//        enemyAccelerationTickInterval = 50
+        enemySpeed = 95
+        enemySpawnTickInterval = 20
         
         setupGround(view)
         setupPlayer(view)
@@ -331,8 +330,8 @@ class GameScene: SKScene, ObservableObject {
         let size = view.frame.height * 0.05
         let player = SKShapeNode(rectOf: .init(width: size, height: size * 2))
         
-        player.strokeColor = .blue
-        player.fillColor = .blue
+        player.strokeColor = .black
+        player.fillColor = .black
         
         player.position.y += player.frame.height * 0.4
         player.zPosition = Layers.player

@@ -33,6 +33,15 @@ enum Orientation {
             return texture
         }
     }
+    
+    func color() -> UIColor {
+        switch self {
+        case .Up:
+            return .blue
+        case .Down:
+            return .purple
+        }
+    }
 }
 
 class EnemyNode: SKSpriteNode {
@@ -45,7 +54,7 @@ class EnemyNode: SKSpriteNode {
         self.side = side
         self.orientation = orientation
         
-        let targetSize = view.height * 0.075
+        let targetSize = view.height * 0.1
         let texture = orientation.texture()
         
         let textureSize = texture.size()
@@ -55,6 +64,9 @@ class EnemyNode: SKSpriteNode {
         let height = textureSize.height * scale
         
         super.init(texture: texture, color: .red, size: .init(width: width, height: height))
+        
+        self.colorBlendFactor = 1
+        self.color = orientation.color()
         
         let pb = SKPhysicsBody(rectangleOf: .init(width: width, height: height))
         pb.allowsRotation = false

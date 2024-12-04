@@ -51,6 +51,7 @@ struct GameView: View {
                             Image("UP")
                                 .resizable()
                                 .scaledToFit()
+                                .tint(Color(uiColor: Orientation.Up.color()))
                         }
                         .contentShape(Rectangle())
                         .simultaneousGesture(
@@ -70,12 +71,12 @@ struct GameView: View {
                         )
                         .disabled(!scene.canStart)
                         .animation(.easeInOut, value: scene.canStart)
-                        .sensoryFeedback(.impact, trigger: isPressingLeft)
                         
                         Button {} label: {
                             Image("DOWN")
                                 .resizable()
                                 .scaledToFit()
+                                .tint(Color(uiColor: Orientation.Down.color()))
                         }
                         .contentShape(Rectangle())
                         .simultaneousGesture(
@@ -95,8 +96,8 @@ struct GameView: View {
                         )
                         .disabled(!scene.canStart)
                         .animation(.easeInOut, value: scene.canStart)
-                        .sensoryFeedback(.impact, trigger: isPressingLeft)
                     }
+                    .sensoryFeedback(.impact(weight: .medium, intensity: 0.4), trigger: isPressingLeft)
                     
                     Spacer()
                     
@@ -105,6 +106,7 @@ struct GameView: View {
                             Image("UP")
                                 .resizable()
                                 .scaledToFit()
+                                .tint(Color(uiColor: Orientation.Up.color()))
                         }
                         .contentShape(Rectangle())
                         .simultaneousGesture(
@@ -124,12 +126,12 @@ struct GameView: View {
                         )
                         .disabled(!scene.canStart)
                         .animation(.easeInOut, value: scene.canStart)
-                        .sensoryFeedback(.impact, trigger: isPressingRight)
                         
                         Button {} label: {
                             Image("DOWN")
                                 .resizable()
                                 .scaledToFit()
+                                .tint(Color(uiColor: Orientation.Down.color()))
                         }
                         .contentShape(Rectangle())
                         .simultaneousGesture(
@@ -149,12 +151,13 @@ struct GameView: View {
                         )
                         .disabled(!scene.canStart)
                         .animation(.easeInOut, value: scene.canStart)
-                        .sensoryFeedback(.impact, trigger: isPressingRight)
                     }
+                    .sensoryFeedback(.impact(weight: .medium, intensity: 0.4), trigger: isPressingRight)
                 }
                 .frame(height: reader.size.height * 0.4)
                 .padding(.vertical, 16)
                 .padding(.horizontal, 48)
+                .sensoryFeedback(.error, trigger: scene.hitstaken)
             }
             
             VStack {
@@ -172,6 +175,7 @@ struct GameView: View {
                             .scaleEffect(sequenceScale + sequenceScaleOffset)
                             .contentTransition(.numericText())
                             .transition(.scale)
+                            .sensoryFeedback(.increase, trigger: scene.sequence)
                     }
                     
                     Spacer()
@@ -243,6 +247,7 @@ struct GameView: View {
                         Text("\(countdown)")
                             .font(.largeTitle)
                             .bold()
+                            .fixedSize()
                             .foregroundStyle(.white)
                             .shadow(radius: 10)
                             .padding()
@@ -400,20 +405,24 @@ struct GameView: View {
                 HStack {
                     Spacer()
                     
-                    Button {
-                        scene.isPaused.toggle()
-                    } label: {
-                        Image(systemName: scene.isPaused ? "play.fill" : "pause.fill")
-                            .bold()
-                            .font(.title2)
-                            .foregroundStyle(.white)
-                            .padding(8)
-                            .background {
-                                RoundedRectangle(cornerRadius: 12)
-                            }
+                    if !scene.hasEnded {
+                        Button {
+                            scene.isPaused.toggle()
+                        } label: {
+                            Image(systemName: scene.isPaused ? "play.fill" : "pause.fill")
+                                .bold()
+                                .font(.title2)
+                                .foregroundStyle(.white)
+                                .padding(8)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 12)
+                                }
+                        }
+                        .shadow(radius: 10)
+                        .disabled(scene.hasEnded)
+                        .transition(.opacity)
+                        .sensoryFeedback(.selection, trigger: scene.isPaused)
                     }
-                    .shadow(radius: 10)
-                    .disabled(scene.hasEnded)
                 }
                 
                 Spacer()
@@ -470,7 +479,7 @@ struct GameView: View {
     private func zoneColor(_ zone: Zone) -> Color {
         switch zone {
         case .A:
-            return .orange
+            return .yellow
         case .B:
             return .green
         case .C:
