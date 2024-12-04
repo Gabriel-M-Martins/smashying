@@ -70,7 +70,7 @@ class EnemyNode: SKSpriteNode {
         self.zPosition = Layers.enemies
         
         let sideCorrector: CGFloat = side == .Left ? -1 : 1
-        self.position.x += (width + view.width/2) * sideCorrector
+        self.position.x += (width*2 + view.width/2) * sideCorrector
     }
     
     required init?(coder aDecoder: NSCoder) {

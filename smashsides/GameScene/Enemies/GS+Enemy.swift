@@ -30,7 +30,7 @@ extension GameScene {
 
 //                enemyAccelerationTickInterval -= 1
                 
-                enemySpeed += 3
+                enemySpeed += 2
                 enemies.forEach { [weak self] enemy in
                     guard let self else { return }
                     

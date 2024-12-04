@@ -36,8 +36,8 @@ class GameScene: SKScene, ObservableObject {
     @Published var enemiesSmashed: Int = 0
     
     var enemySpawnTickInterval: Int = 15
-    var enemyAccelerationTickInterval: Int = 40
-    var enemySpeed: CGFloat = 110
+    var enemyAccelerationTickInterval: Int = 28
+    var enemySpeed: CGFloat = 130
     
     @Published var canStart: Bool = false
     
@@ -135,12 +135,7 @@ class GameScene: SKScene, ObservableObject {
                     .removeFromParent()
                 ])
             )
-            
-            withAnimation {
-                score += points * max(sequence, 1)
-                enemiesSmashed += 1
-            }
-            
+                        
             if zone == .B {
                 withAnimation {
                     sequence += 1
@@ -150,7 +145,12 @@ class GameScene: SKScene, ObservableObject {
                     sequence = 0
                 }
             }
-            
+
+            points *= max(sequence, 1)
+            withAnimation {
+                score += points
+                enemiesSmashed += 1
+            }
             gamedelegate?.smashedEnemy(at: self.convertPoint(toView: enemy.position), points: points, zone: zone)
         } else {
             withAnimation {
