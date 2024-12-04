@@ -55,9 +55,9 @@ extension GameScene {
         path.move(to: enemy.position)
         path.addLine(to: .init(x: 0, y: enemy.position.y))
         
-        if let furthestEnemy = enemies.filter({ $0.side == enemy.side }).max(by: { $0.position.x > $1.position.x }) {
+        if let furthestEnemy = enemies.filter({ $0.side == enemy.side }).max(by: { abs($0.position.x) > abs($1.position.x) }) {
             if furthestEnemy.position.x >= view.frame.width {
-                enemy.position.x = furthestEnemy.position.x + enemy.size.width * 2
+                enemy.position.x = furthestEnemy.position.x + (enemy.size.width * 2 * (furthestEnemy.position.x > 0 ? 1 : -1))
             }
         }
         
