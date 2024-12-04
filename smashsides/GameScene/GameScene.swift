@@ -35,9 +35,9 @@ class GameScene: SKScene, ObservableObject {
     @Published var sequence: Int = 0
     @Published var enemiesSmashed: Int = 0
     
-    var enemySpawnTickInterval: Int = 20
-    var enemyAccelerationTickInterval: Int = 60
-    var enemySpeed: CGFloat = 90
+    var enemySpawnTickInterval: Int = 15
+    var enemyAccelerationTickInterval: Int = 40
+    var enemySpeed: CGFloat = 110
     
     @Published var canStart: Bool = false
     
@@ -97,7 +97,7 @@ class GameScene: SKScene, ObservableObject {
         }
     }
     
-    func onSmashButtonClick(_ side: Side) -> Bool {
+    func onSmashButtonClick(side: Side, orientation: Orientation) -> Bool {
         guard let enemyIdx = enemies.firstIndex(where: { $0.side == side }) else { return false }
         
         let enemy = enemies[enemyIdx]
@@ -108,18 +108,20 @@ class GameScene: SKScene, ObservableObject {
         
         if zonesC.contains(where: { $0.contains(enemy.position) }) {
             zone = .C
-            points = 5
+            points = 1
             isInSmashableArea = true
         } else if zonesB.contains(where: { $0.contains(enemy.position) }) {
             zone = .B
-            points = 10
+            points = 5
             isInSmashableArea = true
         } else if zonesA.contains(where: { $0.contains(enemy.position) }) {
-            points = 5
+            points = 1
             isInSmashableArea = true
         }
         
-        if isInSmashableArea {
+        let smashed = isInSmashableArea && enemy.orientation == orientation
+        
+        if smashed {
             enemies.remove(at: enemyIdx)
             enemy.removeAllActions()
             let time: CGFloat = 0.25
@@ -135,9 +137,18 @@ class GameScene: SKScene, ObservableObject {
             )
             
             withAnimation {
-                sequence += 1
-                score += points
+                score += points * max(sequence, 1)
                 enemiesSmashed += 1
+            }
+            
+            if zone == .B {
+                withAnimation {
+                    sequence += 1
+                }
+            } else {
+                withAnimation {
+                    sequence = 0
+                }
             }
             
             gamedelegate?.smashedEnemy(at: self.convertPoint(toView: enemy.position), points: points, zone: zone)
@@ -147,7 +158,7 @@ class GameScene: SKScene, ObservableObject {
             }
         }
         
-        return isInSmashableArea
+        return smashed
     }
     
     func reset() {
@@ -166,9 +177,9 @@ class GameScene: SKScene, ObservableObject {
         sequence = 0
         enemiesSmashed = 0
         hitstaken = 0
-        enemySpeed = 90
-        enemySpawnTickInterval = 20
-        enemyAccelerationTickInterval = 60
+        enemySpeed = 110
+        enemySpawnTickInterval = 15
+//        enemyAccelerationTickInterval = 50
         
         setupGround(view)
         setupPlayer(view)
@@ -223,7 +234,7 @@ class GameScene: SKScene, ObservableObject {
         let multiplier: CGFloat = 3
         
         // MARK: Left zones
-        let zoneAL = SKShapeNode(rectOf: .init(width: view.frame.width * 0.025 * multiplier, height: view.frame.height))
+        let zoneAL = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
         zoneAL.position.x -= zoneAL.frame.width/2 + view.frame.height * 0.025
         zoneAL.strokeColor = .clear
         
@@ -235,7 +246,7 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneAL)
         
-        let zoneBL = SKShapeNode(rectOf: .init(width: view.frame.height * 0.025 * multiplier, height: view.frame.height))
+        let zoneBL = SKShapeNode(rectOf: .init(width: view.frame.height * 0.035 * multiplier, height: view.frame.height))
         zoneBL.position.x -= zoneBL.frame.width/2 + zoneAL.frame.width * 0.95 + view.frame.height * 0.025
         zoneBL.strokeColor = .clear
         
@@ -247,7 +258,7 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneBL)
         
-        let zoneCL = SKShapeNode(rectOf: .init(width: view.frame.width * 0.025 * multiplier, height: view.frame.height))
+        let zoneCL = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
         zoneCL.position.x -= zoneCL.frame.width/2 + zoneBL.frame.width * 0.95 + zoneAL.frame.width * 0.95 + view.frame.height * 0.025
         zoneCL.strokeColor = .clear
         
@@ -260,7 +271,7 @@ class GameScene: SKScene, ObservableObject {
         self.addChild(zoneCL)
         
         // MARK: Right zones
-        let zoneAR = SKShapeNode(rectOf: .init(width: view.frame.width * 0.025 * multiplier, height: view.frame.height))
+        let zoneAR = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
         zoneAR.position.x += zoneAR.frame.width/2 + view.frame.height * 0.025
         zoneAR.strokeColor = .clear
         
@@ -272,7 +283,7 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneAR)
         
-        let zoneBR = SKShapeNode(rectOf: .init(width: view.frame.height * 0.025 * multiplier, height: view.frame.height))
+        let zoneBR = SKShapeNode(rectOf: .init(width: view.frame.height * 0.035 * multiplier, height: view.frame.height))
         zoneBR.position.x += zoneBR.frame.width/2 + zoneAR.frame.width * 0.95 + view.frame.height * 0.025
         zoneBR.strokeColor = .clear
         
@@ -285,7 +296,7 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneBR)
         
-        let zoneCR = SKShapeNode(rectOf: .init(width: view.frame.width * 0.025 * multiplier, height: view.frame.height))
+        let zoneCR = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
         zoneCR.position.x += zoneCR.frame.width/2 + zoneBR.frame.width * 0.95 + zoneAR.frame.width * 0.95 + view.frame.height * 0.025
         zoneCR.strokeColor = .clear
         

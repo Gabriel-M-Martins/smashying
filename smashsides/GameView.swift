@@ -45,18 +45,21 @@ struct GameView: View {
             VStack {
                 Spacer()
                 
-                Grid {
-                    GridRow {
+                HStack {
+                    VStack {
                         Button {} label: {
-                            RoundedRectangle(cornerRadius: 20)
+                            Image("UP")
+                                .resizable()
+                                .scaledToFit()
                         }
+                        .contentShape(Rectangle())
                         .simultaneousGesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged({ action in
                                     if isPressingLeft { return }
                                     isPressingLeft = true
                                     
-                                    let smashed = scene.onSmashButtonClick(.Left)
+                                    let smashed = scene.onSmashButtonClick(side: .Left, orientation: .Up)
                                     if !smashed {
                                         missedSmash(point: .init(x: reader.size.width * 0.25, y: reader.size.height/2))
                                     }
@@ -69,19 +72,73 @@ struct GameView: View {
                         .animation(.easeInOut, value: scene.canStart)
                         .sensoryFeedback(.impact, trigger: isPressingLeft)
                         
-                        Rectangle()
-                            .fill(.clear)
-                        
                         Button {} label: {
-                            RoundedRectangle(cornerRadius: 20)
+                            Image("DOWN")
+                                .resizable()
+                                .scaledToFit()
                         }
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged({ action in
+                                    if isPressingLeft { return }
+                                    isPressingLeft = true
+                                    
+                                    let smashed = scene.onSmashButtonClick(side: .Left, orientation: .Down)
+                                    if !smashed {
+                                        missedSmash(point: .init(x: reader.size.width * 0.25, y: reader.size.height/2))
+                                    }
+                                })
+                                .onEnded({ _ in
+                                    isPressingLeft = false
+                                })
+                        )
+                        .disabled(!scene.canStart)
+                        .animation(.easeInOut, value: scene.canStart)
+                        .sensoryFeedback(.impact, trigger: isPressingLeft)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack {
+                        Button {} label: {
+                            Image("UP")
+                                .resizable()
+                                .scaledToFit()
+                        }
+                        .contentShape(Rectangle())
                         .simultaneousGesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged({ action in
                                     if isPressingRight { return }
                                     isPressingRight = true
                                     
-                                    let smashed = scene.onSmashButtonClick(.Right)
+                                    let smashed = scene.onSmashButtonClick(side: .Right, orientation: .Up)
+                                    if !smashed {
+                                        missedSmash(point: .init(x: reader.size.width * 0.75, y: reader.size.height/2))
+                                    }
+                                })
+                                .onEnded({ _ in
+                                    isPressingRight = false
+                                })
+                        )
+                        .disabled(!scene.canStart)
+                        .animation(.easeInOut, value: scene.canStart)
+                        .sensoryFeedback(.impact, trigger: isPressingRight)
+                        
+                        Button {} label: {
+                            Image("DOWN")
+                                .resizable()
+                                .scaledToFit()
+                        }
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged({ action in
+                                    if isPressingRight { return }
+                                    isPressingRight = true
+                                    
+                                    let smashed = scene.onSmashButtonClick(side: .Right, orientation: .Down)
                                     if !smashed {
                                         missedSmash(point: .init(x: reader.size.width * 0.75, y: reader.size.height/2))
                                     }
@@ -95,8 +152,9 @@ struct GameView: View {
                         .sensoryFeedback(.impact, trigger: isPressingRight)
                     }
                 }
-                .padding()
                 .frame(height: reader.size.height * 0.4)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 48)
             }
             
             VStack {

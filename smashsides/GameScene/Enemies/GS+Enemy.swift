@@ -23,9 +23,12 @@ extension GameScene {
                 self.spawnEnemies()
             }
             
-            if tick % (enemyAccelerationTickInterval * 2) == 0 && enemySpawnTickInterval >= 4 {
-                enemySpawnTickInterval -= 1
-                enemyAccelerationTickInterval -= 1
+            if tick % enemyAccelerationTickInterval == 0 && .random() {
+                if enemySpawnTickInterval >= 6 {
+                    enemySpawnTickInterval -= 1
+                }
+
+//                enemyAccelerationTickInterval -= 1
                 
                 enemySpeed += 3
                 enemies.forEach { [weak self] enemy in
@@ -46,11 +49,17 @@ extension GameScene {
     
     func spawnEnemies() {
         guard let view = self.view else { return }
-        let enemy = EnemyNode(side: .random(), view: view.frame.size)
+        let enemy = EnemyNode(side: .random(), orientation: .random(), view: view.frame.size)
         
         let path = CGMutablePath()
         path.move(to: enemy.position)
         path.addLine(to: .init(x: 0, y: enemy.position.y))
+        
+        if let furthestEnemy = enemies.filter({ $0.side == enemy.side }).max(by: { $0.position.x > $1.position.x }) {
+            if furthestEnemy.position.x >= view.frame.width {
+                enemy.position.x = furthestEnemy.position.x + enemy.size.width * 2
+            }
+        }
         
         enemy.run(
             .follow(path, asOffset: false, orientToPath: false, speed: enemySpeed)

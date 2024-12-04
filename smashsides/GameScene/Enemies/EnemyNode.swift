@@ -8,17 +8,55 @@
 import Foundation
 import SpriteKit
 
+enum Orientation {
+    case Up, Down
+    
+    static func random() -> Self {
+        [.Up, .Down].randomElement()!
+    }
+    
+    private static var textures: [Orientation : SKTexture] = [:]
+    
+    func texture() -> SKTexture {
+        if let texture = Self.textures[self] {
+            return texture
+        }
+        
+        switch self {
+        case .Up:
+            let texture = SKTexture.init(imageNamed: "UP")
+            Self.textures[.Up] = texture
+            return texture
+        case .Down:
+            let texture = SKTexture.init(imageNamed: "DOWN")
+            Self.textures[.Down] = texture
+            return texture
+        }
+    }
+}
+
 class EnemyNode: SKSpriteNode {
     static let moveAnimationKey: String = "move"
     
     let side: Side
+    let orientation: Orientation
     
-    init(side: Side, view: CGSize) {
+    init(side: Side, orientation: Orientation, view: CGSize) {
         self.side = side
-        let size = view.height * 0.05
-        super.init(texture: nil, color: .red, size: .init(width: size, height: size))
+        self.orientation = orientation
         
-        let pb = SKPhysicsBody(rectangleOf: .init(width: size, height: size))
+        let targetSize = view.height * 0.075
+        let texture = orientation.texture()
+        
+        let textureSize = texture.size()
+        let scale = targetSize / textureSize.width
+        
+        let width = textureSize.width * scale
+        let height = textureSize.height * scale
+        
+        super.init(texture: texture, color: .red, size: .init(width: width, height: height))
+        
+        let pb = SKPhysicsBody(rectangleOf: .init(width: width, height: height))
         pb.allowsRotation = false
         pb.affectedByGravity = false
         
@@ -28,11 +66,11 @@ class EnemyNode: SKSpriteNode {
 
         self.physicsBody = pb
 
-        self.position.y += size * 0.4
+        self.position.y += height
         self.zPosition = Layers.enemies
         
         let sideCorrector: CGFloat = side == .Left ? -1 : 1
-        self.position.x += (size + view.width/2) * sideCorrector
+        self.position.x += (width + view.width/2) * sideCorrector
     }
     
     required init?(coder aDecoder: NSCoder) {
