@@ -35,7 +35,7 @@ struct GameView: View {
     
     var body: some View {
         GeometryReader { reader in
-            //            SpriteView(scene: scene, debugOptions: [.showsPhysics])
+//            SpriteView(scene: scene, debugOptions: [.showsPhysics])
             SpriteView(scene: scene)
                 .onAppear {
                     scene.size = reader.size
@@ -321,27 +321,42 @@ struct GameView: View {
             .padding(20)
             
             ForEach(messages, id: \.id) { message in
-                Text(message.text)
-                    .foregroundStyle(message.color)
-                    .scaleEffect(message.scale)
-                    .rotationEffect(.degrees(message.rotation))
-                    .position(message.point)
-                    .opacity(message.opacity)
-                    .onAppear {
-                        guard let idx = messages.firstIndex(where: { $0.id == message.id }) else { return }
-                        
-                        withAnimation {
-                            messages[idx].point.y -= .random(in: reader.size.height*0.15...reader.size.height*0.25)
-                            messages[idx].scale = 1
-                        } completion: {
-                            withAnimation {
-                                guard let idx = messages.firstIndex(where: { $0.id == message.id }) else { return }
-                                messages[idx].opacity = 0
-                            } completion: {
-                                messages.removeAll(where: { $0.id == message.id })
-                            }
+                VStack {
+                    HStack {
+                        ForEach(0..<message.intensity.stars(), id: \.self) { star in
+//                            Image(Bool.random() ? "STAR_1" : "STAR_2")
+                            Image(message.id.uuidString.first == "A" ? "STAR_1" : "STAR_2")
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundStyle(message.intensity.gradient())
+                                .shadow(color: .red, radius: 5)
+                                .frame(width: reader.size.height * 0.05)
+                                .offset(y: message.intensity.stars() == 3 && star == 1 ? -5 : 0)
                         }
                     }
+                    
+                    Text(message.text)
+                        .foregroundStyle(message.color)
+                }
+                .scaleEffect(message.scale)
+                .rotationEffect(.degrees(message.rotation))
+                .position(message.point)
+                .opacity(message.opacity)
+                .onAppear {
+                    guard let idx = messages.firstIndex(where: { $0.id == message.id }) else { return }
+                    
+                    withAnimation {
+                        messages[idx].point.y -= .random(in: reader.size.height*0.15...reader.size.height*0.25)
+                        messages[idx].scale = 1
+                    } completion: {
+                        withAnimation {
+                            guard let idx = messages.firstIndex(where: { $0.id == message.id }) else { return }
+                            messages[idx].opacity = 0
+                        } completion: {
+                            messages.removeAll(where: { $0.id == message.id })
+                        }
+                    }
+                }
             }
             
             if showBlur {
@@ -489,15 +504,33 @@ struct GameView: View {
     
     private func missedSmash(point: CGPoint) {
         messages.append(
-            .init(point: point, rotation: .random(in: -30...30), text: "MISSED!", color: .red)
+            .init(point: point, rotation: .random(in: -30...30), text: "MISSED!", color: .red, intensity: .Error)
         )
     }
 }
 
 extension GameView: GameDelegate {
     mutating func smashedEnemy(at point: CGPoint, points: Int, zone: Zone) {
+        let intensity: Message.Intensity
+        switch zone {
+        case .A:
+            intensity = .Ok
+        case .B:
+            if scene.sequence > 40 {
+                intensity = .Excellent
+            } else if scene.sequence > 25 {
+                intensity = .Amazing
+            } else if scene.sequence > 10 {
+                intensity = .WoW
+            } else {
+                intensity = .Ok
+            }
+        case .C:
+            intensity = .Ok
+        }
+        
         self.messages.append(
-            .init(point: point, rotation: .random(in: -30...30), text: zone.message(), color: zoneColor(zone))
+            .init(point: point, rotation: .random(in: -30...30), text: zone.message(), color: zoneColor(zone), intensity: intensity)
         )
         
         self.scoreIndicators.append(

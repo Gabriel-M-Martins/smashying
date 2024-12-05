@@ -58,22 +58,7 @@ class GameScene: SKScene, ObservableObject {
     }
     
     override func didMove(to view: SKView) {
-        self.physicsWorld.contactDelegate = self
-        self.physicsWorld.gravity = .zero
-        
-        setupGround(view)
-        
-        setupPlayer(view)
-        
-        setupCamera()
-        
-        setupEnemySpawn()
-        
-        setupZones(view)
-        
-        setupMode()
-        
-        setupSequenceCounter()
+        setup(view)
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -151,6 +136,7 @@ class GameScene: SKScene, ObservableObject {
                 score += points
                 enemiesSmashed += 1
             }
+            
             gamedelegate?.smashedEnemy(at: self.convertPoint(toView: enemy.position), points: points, zone: zone)
         } else {
             withAnimation {
@@ -163,6 +149,12 @@ class GameScene: SKScene, ObservableObject {
     
     func reset() {
         guard let view else { return }
+        setup(view)
+    }
+    
+    private func setup(_ view: SKView) {
+        self.physicsWorld.contactDelegate = self
+        self.physicsWorld.gravity = .zero
         
         isPaused = true
 
@@ -177,8 +169,8 @@ class GameScene: SKScene, ObservableObject {
         sequence = 0
         enemiesSmashed = 0
         hitstaken = 0
-        enemySpeed = 95
-        enemySpawnTickInterval = 20
+        enemySpeed = 100
+        enemySpawnTickInterval = 15
         
         setupGround(view)
         setupPlayer(view)
@@ -186,6 +178,7 @@ class GameScene: SKScene, ObservableObject {
         setupEnemySpawn()
         setupZones(view)
         setupMode()
+        setupSequenceCounter()
         
         enemies = []
 
@@ -230,7 +223,7 @@ class GameScene: SKScene, ObservableObject {
     }
     
     private func setupZones(_ view: SKView) {
-        let multiplier: CGFloat = 3
+        let multiplier: CGFloat = 3.5
         
         // MARK: Left zones
         let zoneAL = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
@@ -324,6 +317,27 @@ class GameScene: SKScene, ObservableObject {
     private func setupCamera() {
         self.addChild(cameraNode)
         self.camera = cameraNode
+        setupCameraShake()
+    }
+    
+    private func setupCameraShake() {
+        $hitstaken.sink { [weak self] hit in
+            if hit == 0 { return }
+            
+            guard let self else { return }
+            
+            var shakeActions: [SKAction] = []
+            for _ in 0..<Int.random(in: 5...10) {
+                let randX = cameraNode.position.x + .random(in: -5...5)
+                let randY = cameraNode.position.y + .random(in: -5...5)
+                
+                shakeActions.append(.move(to: .init(x: randX, y: randY), duration: 0.05))
+            }
+            
+            shakeActions.append(.move(to: cameraNode.position, duration: 0.05))
+            cameraNode.run(.sequence(shakeActions))
+        }
+        .store(in: &cancellables)
     }
     
     private func setupPlayer(_ view: SKView) {
@@ -349,7 +363,7 @@ class GameScene: SKScene, ObservableObject {
     }
     
     private func setupGround(_ view: SKView) {
-        let ground = SKShapeNode(rectOf: .init(width: view.frame.width * 1.5, height: view.frame.height * 0.5))
+        let ground = SKShapeNode(rectOf: .init(width: view.frame.width * 1.5, height: view.frame.height))
         
         ground.fillColor = .black
         ground.strokeColor = .black
