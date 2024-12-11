@@ -213,12 +213,12 @@ struct GameView: View {
                 }
             }
             
-            ForEach(zoneIndicators, id: \.0) { (_, zone, position, size) in
-                Rectangle()
-                    .fill(zoneColor(zone))
-                    .position(.init(x: position.x, y: position.y + reader.size.width * 0.02))
-                    .frame(width: size, height: reader.size.width * 0.04)
-            }
+//            ForEach(zoneIndicators, id: \.0) { (_, zone, position, size) in
+//                Rectangle()
+//                    .fill(zoneColor(zone))
+//                    .position(.init(x: position.x, y: position.y + reader.size.width * 0.02))
+//                    .frame(width: size, height: reader.size.width * 0.04)
+//            }
             
             VStack {
                 HStack {

@@ -8,6 +8,7 @@
 import Foundation
 
 enum Layers {
+    static let indicators: CGFloat = 11
     static let ground: CGFloat = 10
     static let enemies: CGFloat = 9
     static let player: CGFloat = 8

@@ -10,6 +10,18 @@ import SpriteKit
 import GameplayKit
 import Combine
 
+struct Settings {
+    var enemySpawnTickInterval: Int
+    var enemyAccelerationTickInterval: Int
+    var enemySpeed: CGFloat
+    
+    static let standard: Settings = .init(
+        enemySpawnTickInterval: 20,
+        enemyAccelerationTickInterval: 40,
+        enemySpeed: 120
+    )
+}
+
 class GameScene: SKScene, ObservableObject {
     var cameraNode: SKCameraNode = SKCameraNode()
     
@@ -33,11 +45,14 @@ class GameScene: SKScene, ObservableObject {
     @Published var hasEnded: Bool = false
     @Published var isScenePaused: Bool = false
     @Published var sequence: Int = 0
+    @Published var missedHits: Int = 0
     @Published var enemiesSmashed: Int = 0
     
-    var enemySpawnTickInterval: Int = 20
-    var enemyAccelerationTickInterval: Int = 35
-    var enemySpeed: CGFloat = 95
+    @Published var settings: Settings = .standard
+    
+//    var enemySpawnTickInterval: Int = 20
+//    var enemyAccelerationTickInterval: Int = 35
+//    var enemySpeed: CGFloat = 95
     
     @Published var canStart: Bool = false
     
@@ -71,7 +86,7 @@ class GameScene: SKScene, ObservableObject {
             return
         }
         
-        if currentTime - elapsedGameTime >= 0.075 {
+        if currentTime - elapsedGameTime >= 0.05 {
             gametick += 1
             elapsedGameTime += currentTime - elapsedGameTime
         }
@@ -141,6 +156,7 @@ class GameScene: SKScene, ObservableObject {
         } else {
             withAnimation {
                 sequence = 0
+                missedHits += 1
             }
         }
         
@@ -169,8 +185,7 @@ class GameScene: SKScene, ObservableObject {
         sequence = 0
         enemiesSmashed = 0
         hitstaken = 0
-        enemySpeed = 100
-        enemySpawnTickInterval = 15
+        settings = .standard
         
         setupGround(view)
         setupPlayer(view)
@@ -223,10 +238,18 @@ class GameScene: SKScene, ObservableObject {
     }
     
     private func setupZones(_ view: SKView) {
-        let multiplier: CGFloat = 3.5
+        let multiplier: CGFloat = 3
+        
+        let zoneAWidth = view.frame.width * 0.04 * multiplier
+        let zoneBWidth = view.frame.height * 0.05 * multiplier
+        let zoneCWidth = view.frame.width * 0.02 * multiplier
+        
+        let opacity: CGFloat = 0.05
+        let glowWidth: CGFloat = 1
+        let lineWidth: CGFloat = 0.1
         
         // MARK: Left zones
-        let zoneAL = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
+        let zoneAL = SKShapeNode(rectOf: .init(width: zoneAWidth, height: view.frame.height))
         zoneAL.position.x -= zoneAL.frame.width/2 + view.frame.height * 0.025
         zoneAL.strokeColor = .clear
         
@@ -238,9 +261,22 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneAL)
         
-        let zoneBL = SKShapeNode(rectOf: .init(width: view.frame.height * 0.035 * multiplier, height: view.frame.height))
+        let zoneBL = SKShapeNode(rectOf: .init(width: zoneBWidth, height: view.frame.height * 2))
         zoneBL.position.x -= zoneBL.frame.width/2 + zoneAL.frame.width * 0.95 + view.frame.height * 0.025
-        zoneBL.strokeColor = .clear
+        zoneBL.strokeColor = .green
+        zoneBL.fillColor = .green.withAlphaComponent(opacity)
+        zoneBL.glowWidth = glowWidth
+        zoneBL.lineWidth = lineWidth
+        
+        let indicatorL = SKShapeNode(rectOf: .init(width: zoneBWidth, height: view.frame.height * 0.1))
+        indicatorL.position.x = zoneBL.position.x
+        indicatorL.position.y = -indicatorL.frame.height/2
+        indicatorL.zPosition = Layers.indicators
+        
+        indicatorL.fillColor = .green
+        indicatorL.strokeColor = .green
+        
+        self.addChild(indicatorL)
         
         zoneBL.physicsBody = .init()
         zoneBL.physicsBody?.categoryBitMask = PhysicsCategory.zoneB
@@ -250,7 +286,7 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneBL)
         
-        let zoneCL = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
+        let zoneCL = SKShapeNode(rectOf: .init(width: zoneCWidth, height: view.frame.height))
         zoneCL.position.x -= zoneCL.frame.width/2 + zoneBL.frame.width * 0.95 + zoneAL.frame.width * 0.95 + view.frame.height * 0.025
         zoneCL.strokeColor = .clear
         
@@ -263,7 +299,7 @@ class GameScene: SKScene, ObservableObject {
         self.addChild(zoneCL)
         
         // MARK: Right zones
-        let zoneAR = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
+        let zoneAR = SKShapeNode(rectOf: .init(width: zoneAWidth, height: view.frame.height))
         zoneAR.position.x += zoneAR.frame.width/2 + view.frame.height * 0.025
         zoneAR.strokeColor = .clear
         
@@ -275,9 +311,22 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneAR)
         
-        let zoneBR = SKShapeNode(rectOf: .init(width: view.frame.height * 0.035 * multiplier, height: view.frame.height))
+        let zoneBR = SKShapeNode(rectOf: .init(width: zoneBWidth, height: view.frame.height * 2))
         zoneBR.position.x += zoneBR.frame.width/2 + zoneAR.frame.width * 0.95 + view.frame.height * 0.025
-        zoneBR.strokeColor = .clear
+        zoneBR.strokeColor = .green
+        zoneBR.fillColor = .green.withAlphaComponent(opacity)
+        zoneBR.glowWidth = glowWidth
+        zoneBR.lineWidth = lineWidth
+        
+        let indicatorR = SKShapeNode(rectOf: .init(width: zoneBWidth, height: view.frame.height * 0.1))
+        indicatorR.position.x = zoneBR.position.x
+        indicatorR.position.y = -indicatorR.frame.height/2
+        indicatorR.zPosition = Layers.indicators
+        
+        indicatorR.fillColor = .green
+        indicatorR.strokeColor = .green
+        
+        self.addChild(indicatorR)
         
         zoneBR.physicsBody = .init()
         zoneBR.physicsBody?.categoryBitMask = PhysicsCategory.zoneB
@@ -288,7 +337,7 @@ class GameScene: SKScene, ObservableObject {
         
         self.addChild(zoneBR)
         
-        let zoneCR = SKShapeNode(rectOf: .init(width: view.frame.width * 0.035 * multiplier, height: view.frame.height))
+        let zoneCR = SKShapeNode(rectOf: .init(width: zoneCWidth, height: view.frame.height))
         zoneCR.position.x += zoneCR.frame.width/2 + zoneBR.frame.width * 0.95 + zoneAR.frame.width * 0.95 + view.frame.height * 0.025
         zoneCR.strokeColor = .clear
         
@@ -304,14 +353,14 @@ class GameScene: SKScene, ObservableObject {
         zonesB = [zoneBL, zoneBR]
         zonesC = [zoneCL, zoneCR]
         
-        gamedelegate?.spawnZonesIndicators([
-            (Zone.A, self.convertPoint(toView: zoneAL.position), zoneAL.frame.width),
-            (Zone.A, self.convertPoint(toView: zoneAR.position), zoneAR.frame.width),
-            (Zone.B, self.convertPoint(toView: zoneBL.position), zoneBL.frame.width),
-            (Zone.B, self.convertPoint(toView: zoneBR.position), zoneBR.frame.width),
-            (Zone.C, self.convertPoint(toView: zoneCL.position), zoneCL.frame.width),
-            (Zone.C, self.convertPoint(toView: zoneCR.position), zoneCR.frame.width),
-        ])
+//        gamedelegate?.spawnZonesIndicators([
+//            (Zone.A, self.convertPoint(toView: zoneAL.position), zoneAL.frame.width),
+//            (Zone.A, self.convertPoint(toView: zoneAR.position), zoneAR.frame.width),
+//            (Zone.B, self.convertPoint(toView: zoneBL.position), zoneBL.frame.width),
+//            (Zone.B, self.convertPoint(toView: zoneBR.position), zoneBR.frame.width),
+//            (Zone.C, self.convertPoint(toView: zoneCL.position), zoneCL.frame.width),
+//            (Zone.C, self.convertPoint(toView: zoneCR.position), zoneCR.frame.width),
+//        ])
     }
     
     private func setupCamera() {
@@ -323,6 +372,24 @@ class GameScene: SKScene, ObservableObject {
     private func setupCameraShake() {
         $hitstaken.sink { [weak self] hit in
             if hit == 0 { return }
+            
+            guard let self else { return }
+            
+            var shakeActions: [SKAction] = []
+            for _ in 0..<Int.random(in: 5...10) {
+                let randX = cameraNode.position.x + .random(in: -5...5)
+                let randY = cameraNode.position.y + .random(in: -5...5)
+                
+                shakeActions.append(.move(to: .init(x: randX, y: randY), duration: 0.05))
+            }
+            
+            shakeActions.append(.move(to: cameraNode.position, duration: 0.05))
+            cameraNode.run(.sequence(shakeActions))
+        }
+        .store(in: &cancellables)
+        
+        $missedHits.sink { [weak self] hit in
+            if hit <= 0 { return }
             
             guard let self else { return }
             
@@ -374,5 +441,3 @@ class GameScene: SKScene, ObservableObject {
         self.addChild(ground)
     }
 }
-
-
